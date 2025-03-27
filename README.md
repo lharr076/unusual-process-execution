@@ -1,22 +1,22 @@
 <img width="400" src="https://github.com/lharr076/insider-threat-scenario/blob/main/assests/insider_threat_image.jpg" alt="Insider Threat image"/>
 
-# Threat Hunt Report: Insider Threat
-- [Scenario Creation](https://github.com/lharr076/insider-threat-scenario/blob/main/insider_threat_exfil_sensitve_data_template.md)
+# Threat Hunt Report: Unusual Process Execution
+- [Scenario Creation](https://github.com/lharr076/unusual-process-execution/blob/main/unusual_process_execution.md)
 
 ## Platforms and Languages Leveraged
 - Windows 10 Virtual Machines (Microsoft Azure)
 - EDR Platform: Microsoft Defender for Endpoint
 - Kusto Query Language (KQL)
-- Microsoft Outlook
+- Microsoft PowerShell
 
 ##  Scenario
 
-Management suspects that an employee may be exfiltrating PII data via email. Additionally, there have been anonymous reports of the employee being disgruntled after performance evaluation. The goal is to detect any files or folders that have been created and/or moved and analyze related security incidents to mitigate potential risks. If any data is found, notify management.
+An employee logs into their machine and noticed in the Documents folder the financial records folder they created is missing along with all of the documents inside. The employee checked other locations on the device to be sure they did not move it elseware but still can not find it. The goal is to find what happened to the folder and analyze the incident. If any data is found, notify management.
 
 ### High-Level Insider Threat IoC Discovery Plan
 
-- **Check `DeviceFileEvents`** for any `PII` file events.
-- **Check `DeviceProcessEvents`** for any signs of Microsoft Outlook usage.
+- **Check `DeviceFileEvents`** for any `Company` file events.
+- **Check `DeviceProcessEvents`** for any signs of the command line or PowerShell usage.
 
 ---
 
@@ -24,15 +24,16 @@ Management suspects that an employee may be exfiltrating PII data via email. Add
 
 ### 1. Searched the `DeviceFileEvents` Table
 
-Searched for any file that had the string "PII" in it and discovered what looks like the user "employee" created a PII file in Notepad, moved the file into a folder called PII on the desktop, and then created a zip file called `PII.zip` in the Windows Temp folder at `2025-03-25T10:41:03`. These events began at `2025-03-25T10:32:22`.
+Searched for any file that had the string "Company" in it and discovered what looks like the user "Training-vm-1186" created a Company Records folder in the Documents folder at `2025-03-26T20:48:18`.
 
 **Query used to locate events:**
 
 ```kql
 DeviceFileEvents
 | where DeviceName startswith target_machine
-| where FileName contains "PII"
+| where FileName contains "Company"
 | where ActionType in ("FileCreated", "FileRenamed")
+| where Timestamp >=  datetime(2025-03-26)
 | project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, Account = InitiatingProcessAccountName
 | order by Timestamp desc
 ```
