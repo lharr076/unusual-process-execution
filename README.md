@@ -26,7 +26,7 @@ An employee logs into their machine and noticed in the Documents folder the fina
 
 Searched for any file that had the string "Company" in it and discovered what looks like the user "Training-vm-1186" created a Company Records folder in the Documents folder at `2025-03-26T20:48:18`.
 
-**Query used to locate events:**
+**Query used to locate event:**
 
 ```kql
 DeviceFileEvents
@@ -37,13 +37,13 @@ DeviceFileEvents
 | project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, Account = InitiatingProcessAccountName
 | order by Timestamp desc
 ```
-<img width="1212" alt="image" src="https://github.com/lharr076/insider-threat-scenario/blob/main/assests/DeviceFileEvents.jpg">
+<img width="1212" alt="image" src="https://github.com/lharr076/unusual-process-execution/blob/main/assests/DeviceEvents_1.jpg">
 
 ---
 
 ### 2. Searched the `DeviceProcessEvents` Table
 
-Searched for any `ProcessCommandLine` that contained the string "olk.exe". Based on the logs returned, at `2025-03-25T05:48:35`, an employee on the "training-vm-118" device ran `olk.exe` which is Microsoft Outlook outside operation hours of the company. Between `2025-03-25T10:34:32` and `2025-03-25T10:37:09` multiple Outlook processes are created possibly signaling preparation for exfiltration. At `2025-03-25T18:40:54` the `olk.exe` process is created again afterhours.
+Searched for a `FileName` that equal to "cmd.exe" and `ProcessCommandLine` that contained the PowerShell string "Remove-Item". Based on the logs returned, at `2025-03-27T09:04:10`, the command line was opened and a PowerShell script was ran to delete the Documents folder.
 
 **Query used to locate event:**
 
@@ -51,17 +51,17 @@ Searched for any `ProcessCommandLine` that contained the string "olk.exe". Based
 
 DeviceProcessEvents
 | where DeviceName == target_machine
-| where FileName == "olk.exe"
+| where FileName == "cmd.exe" and ProcessCommandLine contains "Remove-Item"
 | project Timestamp, DeviceName, AccountName, ActionType, FileName, FolderPath, SHA256, ProcessCommandLine
 | order by Timestamp desc
 ```
-<img width="1212" alt="image" src="https://github.com/lharr076/insider-threat-scenario/blob/main/assests/DeviceProcessEvents.jpg">
+<img width="1212" alt="image" src="https://github.com/lharr076/unusual-process-execution/blob/main/assests/DeviceProcessEvents_1.jpg">
 
 ---
 
 ## Chronological Event Timeline 
 
-### 1. File Created - PII Data Text File
+### 1. File Created - End user created a company financial records
 
 - **Timestamp:** `2025-03-25T10:33:01`
 - **Event:** The user "Training-vm-1186" created a file named `PII Data.txt` to the Documents folder.
@@ -112,6 +112,6 @@ The user "Training-vm-1186" on the "training-vm-118" performed data exfiltration
 
 ## Response Taken
 
-Data exfiltration was confirmed on the endpoint `training-vm-118` by the user `Training-vm-1186`. The device was isolated, and the user's direct manager was notified.
+Remote Code Execution was confirmed on the endpoint `training-vm-118` by an `unknown threat actor`. The device was isolated, and the user's direct manager was notified.
 
 ---
